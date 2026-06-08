@@ -1,0 +1,3176 @@
+{
+  "name": "Personal Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        2272,
+        2656
+      ],
+      "id": "268247ba-879f-42f6-87a7-3b5e3c2b2afc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "=You are Shabbir Nooruddin's personal assistant. Your job is to make his life easier by being the source of information and execution for a large chunk of his daily tasks.\n\nThe current time is {{ $now }}.\n\nThese include:\n- News\n- Weather\n- Travel information\n- Managing email\n- Creating blog posts\n- Keeping track of expenses\n- Personal Calendar\n- Checking the social media calendar\n\nWEATHER AND NEWS\n----------------\nWhen asked about the weather or news, call the weather and news agent.\n\nFor news, prioritize the most recent stories and just output the headline and a brief summary.\n\nFor weather, only provide temperature, heat index or wind chill, and precipitation. Provide sunrise, sunset, moonrise, moonset if asked.\n\nTRAVEL INFORMATION\n-----------------\nUse the flights and hotel agent to find suitable flights or hotels for my query. Unless I specify otherwise, assume it's economy, one way, use the biggest airport in the city, and as few stops as possible.\n\nMANAGING EMAIL\n---------------\nYou have full access to all of my email and all functions. Assist me however I need. If I ask you to draft an email, confirm the draft with me before you send it. If I don't provide you with an email address, use the Contacts tool to find it, and confirm before sending. If you don't find it, ask me to provide it.\n\nMANAGING EXPENSES\n-----------------\nI will tell you to log or retrieve expenses. Use the finance tracker agent to add expenses or retrieve any information I request. Expense format to add: currency, amount, type - nothing else needed unless I specify.\n\nDEEP RESEARCH\n--------------\nI will ask you any question about anything. Use the deep research agent and retrieve information request. If I specify(don't ask), do deeper research.\n\nCALENDAR\n--------\nUse the Calendar Tool to help me keep track of meetings, book new ones, and manage existing ones. If I ask you to book a meeting with someone, try to find their info using the Contacts tool. If you're unable to find it, ask me for it.\n\nSOCIAL MEDIA CALENDAR\n---------------\nUse the Social Media Calendar tool to retrieve Instagram, LinkedIn, and Tiktok content ideas and suggested frameworks. The Calendar tool must use its own Airtable search tools to find content ideas from MY EXISTING research database.\n\nI will either reject the idea or tell you which framework to choose - send that back to the social media calendar tool and it will take care of the rest. then get back to me with the confirmation you get from the social calendar tool.\n\nCONTENT WRITING\n--------------\nUse the create content tool to write blog posts. I will tell you a topic. Use the tool to write the content. The tool will return a fully formatted blog post, which you are to use the Google Docs tool to generate a new document and reply with the shareable URL.\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        848
+      ],
+      "id": "b038a474-4b06-4ad7-9c05-c0d54b302bc6",
+      "name": "Orchestrator Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI agent to do reseearch on various topics.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You have access to the Tavily Tool and Perplexity Tool to research various topics. Use them!\n\nIf the topic requires MORE in-depth research, use the In-Depth Research Tool."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        3936,
+        1680
+      ],
+      "id": "1922fdbf-6df6-47ab-8955-1a9b412b64e0",
+      "name": "Research Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Searches tavily for relevant information and sources",
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{{ $fromAI(\"search_topic\")}}\",\n  \"auto_parameters\": false,\n  \"topic\": \"general\",\n  \"search_depth\": \"basic\",\n  \"chunks_per_source\": 3,\n  \"max_results\": 3,\n  \"include_answer\": true,\n  \"include_raw_content\": true,\n  \"include_images\": false,\n  \"include_image_descriptions\": false,\n  \"include_favicon\": false,\n  \"include_domains\": [],\n  \"exclude_domains\": [],\n  \"country\": null\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        3968,
+        1872
+      ],
+      "id": "ac1d5f14-6c3a-4c38-9fdf-041fe005e87a",
+      "name": "Tavily Research"
+    },
+    {
+      "parameters": {
+        "model": "sonar-pro",
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        4128,
+        1856
+      ],
+      "id": "6e30f083-468c-4347-a116-5785117df454",
+      "name": "Message a model in Perplexity"
+    },
+    {
+      "parameters": {
+        "toolDescription": "in depth research",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        4384,
+        1760
+      ],
+      "id": "413a6242-8091-4696-b911-f657e8e81825",
+      "name": "In-Depth Research Tool"
+    },
+    {
+      "parameters": {
+        "model": "sonar-deep-research",
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        4640,
+        1872
+      ],
+      "id": "3fe92991-d6db-4186-86d7-65ca79fb603e",
+      "name": "Message a model in Perplexity1"
+    },
+    {
+      "parameters": {
+        "content": "## Research Assistant",
+        "height": 432,
+        "width": 864,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3904,
+        1600
+      ],
+      "typeVersion": 1,
+      "id": "98159865-b736-465b-a0e2-5da0e66df7eb",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Document Creator and Reporting Agent",
+        "height": 144,
+        "width": 608
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        2064
+      ],
+      "typeVersion": 1,
+      "id": "7320faad-0d16-4773-afbe-1cae84b54892",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Calendar Agent\n",
+        "height": 464,
+        "width": 720,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        192,
+        1616
+      ],
+      "typeVersion": 1,
+      "id": "0138e8f0-0325-4ae9-971f-e7cafdff39ae",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Email Agent\n",
+        "height": 608,
+        "width": 608,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        944,
+        1600
+      ],
+      "typeVersion": 1,
+      "id": "1017d454-d9ab-4aa9-b711-9eb7a929da31",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Content Creation Agent\n",
+        "height": 608,
+        "width": 1296
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2576,
+        1600
+      ],
+      "typeVersion": 1,
+      "id": "08bb7a7c-30a7-4ad3-a1fa-14a1514016d1",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Content Planner Agent\n",
+        "height": 416,
+        "width": 960,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        5664,
+        1584
+      ],
+      "typeVersion": 1,
+      "id": "e9633256-9eb7-4f6b-b666-de8056267f23",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Finance Tracker",
+        "height": 416,
+        "width": 544,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -992,
+        1616
+      ],
+      "typeVersion": 1,
+      "id": "3fb31f65-89b8-49c2-a39b-2cfd231dfb7d",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Weather and News Agent",
+        "height": 416,
+        "width": 544,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -400,
+        1616
+      ],
+      "typeVersion": 1,
+      "id": "f2dcd1e6-78db-4a96-b1d2-708fabe3127e",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        2448
+      ],
+      "id": "f90e04af-7c60-46d1-a951-2c4ca1fb1c8f",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "FEJIq5AtwOcSCr66",
+          "name": "Anthropic account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Research AI agent that uses tavily and perplexity to get information about a topic",
+        "text": "=You are an expert at researching for writing website content and blog posts. I will provide you with a topic, and you are to use the Perplexity tool and autocomplete suggestions tools to help me craft an engaging title and H2 - H3 structure for the blog post. Your output should be: Title, up to 3 x H2s and nested H3s, nothing else.\n\nThe final H2 should be a conclusion.\n\nTopic: {{ $fromAI(\"search_query\") }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        2720,
+        1840
+      ],
+      "id": "5bbdaf8f-9066-49cd-a996-aa1e27631356",
+      "name": "Titles and Structure Tool"
+    },
+    {
+      "parameters": {
+        "model": "sonar-pro",
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.perplexityTool",
+      "typeVersion": 1,
+      "position": [
+        2864,
+        2048
+      ],
+      "id": "f02ebff5-0e12-49a6-9dee-ff59e5c32213",
+      "name": "Perplexity Tool"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Write blog post section tool",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        3088,
+        1920
+      ],
+      "id": "f4f0ddb4-8848-4c8e-8d6b-bcdaae974f99",
+      "name": "Write Section Tool"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use replicate to generate an image",
+        "method": "POST",
+        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"input\": {\n      \"prompt\": \"{{ $fromAI(\"prompt\") }}\",\n      \"go_fast\": true,\n      \"megapixels\": \"1\",\n      \"num_outputs\": 1,\n      \"aspect_ratio\": \"1:1\",\n      \"output_format\": \"webp\",\n      \"output_quality\": 80,\n      \"num_inference_steps\": 4\n    }\n  }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        3456,
+        2064
+      ],
+      "id": "c7e93030-a2cd-436e-abd9-5c7a48915f46",
+      "name": "Generate Image"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Check status of generated image",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        2064
+      ],
+      "id": "22e36c59-e05a-4a87-93f5-9f0955522de4",
+      "name": "Check Status"
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI agent that can generate images",
+        "text": "=You are an expert at crafting prompts for AI-powered image generation models.\n\nThis is the topic my article is about: {{ $fromAI(\"topic\") }}\n\nThis is the image style:\n{{ $fromAI(\"style\") }}\n\nUse the Replicate Generate Image tool to start the image generation process. Then use the Get Image(use the urls.get field to check) and keep checking until the status is complete, and once complete, return the image URL.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        3408,
+        1872
+      ],
+      "id": "9ac10db3-bb0a-4b32-8371-c43b3d83386c",
+      "name": "Generate Image Tool"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get autocomplete suggestions",
+        "url": "=https://serpapi.com/search.json?engine=google_autocomplete&q={{ $fromAI(\"keyword_as_searched_by_user\") }}&api_key=a60317e455992230c808d2c9028f2d634c4758d691e9729b1d3c6075ed20736f",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        2704,
+        2048
+      ],
+      "id": "fd5f9a6c-1cab-4ecb-b4d3-b9cfec1c1b5e",
+      "name": "Autocomplete Suggestions"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Write Blog Posts",
+        "text": "=You are an expert SEO content writer. You know how to research inch wide, mile deep, and you write insightful, well-researched, engaging, and READABLE content pieces about all topics.\n\nI will provide you with a keyword. Use the Generate Title and Structure tool to create a skeleton for the article.\n\nThen, write out the blog post, section by section, using the Perplexity and Tavily research tools to get data, and the Write section tool to write out each H2 section, and importantly linking out to sources wherever relevant.\n\nThen call the Generate Image tool and get the image URL - one image per blog post, to be inserted right before the first H2\n\nDo this iteratively until your output is a final, compiled, HTML-formatted blog post that's ready to publish.\n\nWorkflow:\n\n1) receive keyword\n2) generate title and structure\n3) generate introduction\n4) generate each section one-by-one\n5) Generate Image\n6) compile into ready blog post and output to user\n\nOutput format for blog post\n\n<h1>Title...</h1>\n<p>intro</p>\n<h2>heading</h2>\n<h3>heading</h3>\n<p>text</p>\netc etc",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        3104,
+        1696
+      ],
+      "id": "66adb559-d4e1-4b97-babf-39d057d240ba",
+      "name": "Blog Post Writer"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appHZEVzMHF9eGIx6",
+          "mode": "list",
+          "cachedResultName": "Expense Tracker",
+          "cachedResultUrl": "https://airtable.com/appHZEVzMHF9eGIx6"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSi2ykaaw77cG8C",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appHZEVzMHF9eGIx6/tblSi2ykaaw77cG8C"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -656,
+        1904
+      ],
+      "id": "e2f868c1-dff1-4c6c-b5fd-bc2600bf1e8d",
+      "name": "Search Entries"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appHZEVzMHF9eGIx6",
+          "mode": "list",
+          "cachedResultName": "Expense Tracker",
+          "cachedResultUrl": "https://airtable.com/appHZEVzMHF9eGIx6"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblSi2ykaaw77cG8C",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/appHZEVzMHF9eGIx6/tblSi2ykaaw77cG8C"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Expense": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Expense', ``, 'string') }}",
+            "Amount": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Amount', ``, 'number') }}",
+            "Category": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Category', ``, 'string') }}",
+            "Date": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Date', `datetime variable`, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Expense",
+              "displayName": "Expense",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -896,
+        1904
+      ],
+      "id": "b2b61862-170d-4da9-8d01-c1825788ed2a",
+      "name": "Create Entry"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Personal Finance Tracker Agent",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant for an expense tracker. First, you must determine whether the input I provide you with is adding a new entry or inquiring about existing entries.\n\nCurrency is Indian rupee or INR\n\nThe current date is {{ $now }}\n\nIf it's a new entry: Create a new entry with a corresponding category: entertainment, food, eating out, travel, transport, health, personal. Update the date field using an ISO 8601 format date, sent as a datetime variable, NOT a string.\n\nIf you receive a bunch of text from a scanned invoice, determine the date and amount and create a single entry.\n\nWhen you reply with a confirmation of an entry you made, only confirm the last successful entry, not any earlier ones. One message from you should only confirm a single transaction.\n\nIf it's an inquiry, use the search entries tool to get information and answer my question."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        1744
+      ],
+      "id": "e0e80b3f-6c89-4811-80fe-7a9d166ac18c",
+      "name": "Finance Tracker Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        2112,
+        2448
+      ],
+      "id": "c6d0d28f-0f6d-43d7-8207-60db2349e26a",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "toolDescription": "weather and news agent",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You have access to two tools: SerpAPI for news and WeatherAPI for weather."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        1696
+      ],
+      "id": "279573ad-727d-47f2-b053-598d6f1da3e4",
+      "name": "Weather and News Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        2656
+      ],
+      "id": "976619ef-64b2-4db3-869c-7b3bad31b4e9",
+      "name": "GPT-5-Nano",
+      "credentials": {
+        "openAiApi": {
+          "id": "XAmTDfAtpbYA7enE",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "SERPapi for news",
+        "url": "https://serpapi.com/search?engine=google_news_light",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `the news query to search for`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -48,
+        1872
+      ],
+      "id": "3c18c050-cffc-4611-8b1b-7845e5807423",
+      "name": "SERPapi news"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get weather information",
+        "url": "http://api.weatherapi.com/v1//forecast.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `the location (US UK CN zip code or city name)`, 'string') }}"
+            },
+            {
+              "name": "days",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `how many days forecast required. if not specified, then blank.`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -336,
+        1872
+      ],
+      "id": "dc059335-ec0e-4675-989d-7abfadf9cc96",
+      "name": "Weather"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Calendar Tool",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=The current date is {{ $now }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        1728
+      ],
+      "id": "b232206e-97e6-49df-b395-0eba5edddeb3",
+      "name": "Calendar Agent"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "shabbir@shabbirnoor.com",
+          "mode": "list",
+          "cachedResultName": "shabbir@shabbirnoor.com"
+        },
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Location', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        1888
+      ],
+      "id": "464bbe68-afb0-4297-afa7-3d73f692fa0a",
+      "name": "Create an event in Google Calendar"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "shabbir@shabbirnoor.com",
+          "mode": "list",
+          "cachedResultName": "shabbir@shabbirnoor.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        1888
+      ],
+      "id": "51ed8d6b-d106-495f-94e6-9b65491c0185",
+      "name": "Delete an event in Google Calendar"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "shabbir@shabbirnoor.com",
+          "mode": "list",
+          "cachedResultName": "shabbir@shabbirnoor.com"
+        },
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        528,
+        1888
+      ],
+      "id": "8b48229c-6d08-4533-9d0c-06145ce8e743",
+      "name": "Get many events in Google Calendar"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "shabbir@shabbirnoor.com",
+          "mode": "list",
+          "cachedResultName": "shabbir@shabbirnoor.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        1888
+      ],
+      "id": "b37cd564-d277-4802-80fc-7281b1482480",
+      "name": "Get an event in Google Calendar"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "shabbir@shabbirnoor.com",
+          "mode": "list",
+          "cachedResultName": "shabbir@shabbirnoor.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "useDefaultReminders": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Use_Default_Reminders', ``, 'boolean') }}",
+        "updateFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        1888
+      ],
+      "id": "5aa56169-0fe2-428b-aff3-83a00aa1cfe5",
+      "name": "Update an event in Google Calendar"
+    },
+    {
+      "parameters": {
+        "content": "## Contacts Agent\n",
+        "height": 416,
+        "width": 768,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4832,
+        1600
+      ],
+      "typeVersion": 1,
+      "id": "a8908111-ea58-4b1c-a44c-bf13fa84da7f",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "toolDescription": "email management tool",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        1632
+      ],
+      "id": "7ff131c0-8e76-47a7-8558-f5cc87ea2af3",
+      "name": "Email Management Agent"
+    },
+    {
+      "parameters": {
+        "content": "## Travel Agent",
+        "height": 416,
+        "width": 944,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        1600
+      ],
+      "typeVersion": 1,
+      "id": "04145abb-09dd-4685-88e6-a0a95093f1be",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get Contacts from Google",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        4992,
+        1664
+      ],
+      "id": "ce5fc292-75db-4e69-b514-c789edb15972",
+      "name": "Get Contact Info"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "fields": [
+          "emailAddresses",
+          "phoneNumbers",
+          "addresses"
+        ],
+        "useQuery": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Use_Query', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        5408,
+        1824
+      ],
+      "id": "5e0f7d3e-dd6e-4c60-ab8e-36e8d002b533",
+      "name": "Get many contacts in Google Contacts"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "contactId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Contact_ID', ``, 'string') }}",
+        "fields": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Fields', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.googleContactsTool",
+      "typeVersion": 1,
+      "position": [
+        5232,
+        1824
+      ],
+      "id": "97890efc-8983-448b-9d45-d53cb04504ee",
+      "name": "Get a contact in Google Contacts"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get flight and hotel information",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "=Your job is to find flights and/or hotels using the find flights and find hotels tools.\n\nAt the very least, for any query, you'll need departure and arrival locations and and a departure date. If nothing else is provided, assume that it's a one way for one adult.\n\nHere's the variable structure to insert into the URL:\n\n&departure_id={departure_id}&arrival_id={arrival_id}&outbound_date={outbound_date}&return_date={return_date}&currency=USD&hl=en&gl=us&adults={adults}\n\nYou can use the following parameters to construct the URL. Do not send empty parameters\n\ndeparture_id = departing airport code, extrapolate from the city name and use the biggest airport unless specified otherwise.\narrival_id = arrival airport code, extrapolate from the city name and use the biggest airport unless specified otherwise.\noutbound_date\nreturn_date\nadults\nchildren\ninfants_on_lap\ninfants_in_seat\ntravel_class {1 - economy, 2 - premium, 3 - business, 4 - first} pass number only\n\nAdd &type=2 if one way, which is default unless i specify a return date\n\nHotels\n\nAsk about children ages if there are children present and I haven't provided ages. Default is 4 star hotel class and above unless I specify. Rating minimum 4.\n\nHere's the variable structure to insert into the URL\n\n&q=Bali+Resorts&check_in_date=2025-06-05&check_out_date=2025-06-06&adults=2&currency=USD&gl=us&hl=en\n\nYou can use the following parameters to construct the URL. Do not send empty parameters\n\nq = query (eg Hotels in Bali)\ncheck_in_date\ncheck_out_date\nadults\nchildren\nchildren_ages {required if children present, prompt and ask if i dont provide}\nrating { Available options:\n7 - 3.5+\n8 - 4.0+\n9 - 4.5+ }\nhotel_class { 2 - 2-star\n3 - 3-star\n4 - 4-star\n5 - 5-star }\n\nProvide the top 3 options weighted by cost effectiveness and comfort."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1968,
+        1648
+      ],
+      "id": "ecbfa737-d42b-4b3a-88d7-2e1198af3121",
+      "name": "Travel Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "get flight information",
+        "url": "=https://serpapi.com/search?engine=google_flights&{params}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "{params}",
+              "description": "entire parameter string from the system message"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1888,
+        1856
+      ],
+      "id": "f3969d95-a4e7-401e-bc7f-e1febbb2084b",
+      "name": "Check Flights"
+    },
+    {
+      "parameters": {
+        "toolDescription": "get hotel information",
+        "url": "=https://serpapi.com/search?engine=google_hotels&{params}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "params",
+              "description": "entire parameter string from the system message"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2160,
+        1856
+      ],
+      "id": "4fc70626-96b9-4c0e-97e1-efa770da9a65",
+      "name": "Check Hotels"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Add one or more labels to an email message. AI-configurable parameters: Message_ID (string) - the ID of the message to label; Label_Names_or_IDs (string) - comma-separated label names or IDs to apply.",
+        "operation": "addLabels",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "labelIds": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Label_Names_or_IDs', ``, 'string') }}"
+      },
+      "id": "45b16c5e-6fcb-4b4a-a8de-4e7220e0d2b5",
+      "name": "addLabels1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1424,
+        1936
+      ],
+      "webhookId": "81d61988-8213-4175-b75d-76cb67ce4a3b",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Delete an email message. AI-configurable parameters: Message_ID (string) - the ID of the message to delete.",
+        "operation": "delete",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}"
+      },
+      "id": "041bab97-0232-4687-be25-c5e1887331a8",
+      "name": "delete1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1152,
+        1776
+      ],
+      "webhookId": "03319c28-ef88-40f4-897c-f44c21dbdf1f",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieve details of an email message. AI-configurable parameters: Message_ID (string) - the ID of the message to retrieve.",
+        "operation": "get",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}"
+      },
+      "id": "8224e85a-9911-4d30-9bca-3bee0750847f",
+      "name": "get1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1344,
+        1792
+      ],
+      "webhookId": "cf5acbf3-a08f-4da6-9f14-9751eed6e5b8",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Retrieve multiple email messages based on filters. AI-configurable parameters: Return_All (boolean) - whether to return all matching messages; Search (string) - Gmail query string to filter messages; Received_After (string) - datetime (RFC3339) after which messages are received; Received_Before (string) - datetime before which messages are received; Sender (string) - email address of the sender.",
+        "operation": "getAll",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "filters": {
+          "q": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Search', ``, 'string') }}",
+          "receivedAfter": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Received_After', ``, 'string') }}",
+          "receivedBefore": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Received_Before', ``, 'string') }}",
+          "sender": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sender', ``, 'string') }}"
+        }
+      },
+      "id": "92a62ad4-b5f3-4d34-907f-401c5f4153ba",
+      "name": "search1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1456,
+        1792
+      ],
+      "webhookId": "cb3d028a-6cab-4946-b368-aa56bf271af9",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Mark an email message as read. AI-configurable parameters: Message_ID (string) - the ID of the message to mark as read.",
+        "operation": "markAsRead",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}"
+      },
+      "id": "c3a4c918-4178-4950-927d-b5c7996bc1f2",
+      "name": "markAsRead1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        992,
+        1936
+      ],
+      "webhookId": "e769b7cf-9622-434d-b98d-4bde7653238d",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Mark an email message as unread. AI-configurable parameters: Message_ID (string) - the ID of the message to mark as unread.",
+        "operation": "markAsUnread",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}"
+      },
+      "id": "368c7803-b8ae-4644-956f-c57d2ea51524",
+      "name": "markAsUnread1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1152,
+        1936
+      ],
+      "webhookId": "c26a8635-4329-498e-b293-4350baed493d",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Reply to an email message. AI-configurable parameters: Message_ID (string) - the ID of the message; Message (string) - the reply content; Attachment_Field_Name (string) - input field name containing attachments; BCC (string) - comma-separated BCC recipients; CC (string) - comma-separated CC recipients.",
+        "operation": "reply",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Attachment_Field_Name', ``, 'string') }}"
+              }
+            ]
+          },
+          "bccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('BCC', ``, 'string') }}",
+          "ccList": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('CC', ``, 'string') }}"
+        }
+      },
+      "id": "14ce83d9-0b2e-430b-a9cd-ddd60ea48acf",
+      "name": "reply1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1008,
+        1792
+      ],
+      "webhookId": "fbd30b84-25ac-4bab-8a66-5366b9b7a0be",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Remove one or more labels from an email message. AI-configurable parameters: Message_ID (string) - the ID of the message; Label_Names_or_IDs (string) - comma-separated label names or IDs to remove.",
+        "operation": "removeLabels",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "labelIds": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Label_Names_or_IDs', ``, 'string') }}"
+      },
+      "id": "d9c85cc1-e087-4cb0-bb4e-d6c538288919",
+      "name": "removeLabels1",
+      "type": "n8n-nodes-base.gmailTool",
+      "position": [
+        1296,
+        1936
+      ],
+      "webhookId": "e83fb7ee-2716-444b-9a4e-208eea215728",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1264,
+        2064
+      ],
+      "id": "23b1e276-a994-482c-9468-6c816eb202db",
+      "name": "Send a message in Gmail",
+      "webhookId": "22665ce2-0110-4d53-b3e2-16db4ce7815b"
+    },
+    {
+      "parameters": {
+        "content": "## AI Stack",
+        "height": 416,
+        "width": 544,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1872,
+        2400
+      ],
+      "typeVersion": 1,
+      "id": "d386d3cd-ba4b-44c4-82d3-be86aff0abe9",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Social Media Calendar Tool",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You are a helpful assistant. You have a Get LinkedIn Ideas Tool, a Get Tiktok Ideas Tool, and a Get Instagram Ideas Tool.\n\nYou also have access to Choose Instagram Idea, Choose Tiktok Idea, and Choose LinkedIn Idea - use these to update the chosen records with my chosen framework and generate or reject command.\n\nThe Framework parameter should be passed as Framework 1 Framework 2 or Framework 3\n\nAnd the Status parameter should be passed as Generate Content or Reject"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        5984,
+        1616
+      ],
+      "id": "b1ad6210-5928-4566-8659-33f34bf939be",
+      "name": "Social Media Calendar"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Find Instagram Ideas",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app7GtQRtd1vnFEdW",
+          "mode": "list",
+          "cachedResultName": "Social Automation",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbla6GNwPXjx0yalQ",
+          "mode": "list",
+          "cachedResultName": "Instagram Ideas",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW/tbla6GNwPXjx0yalQ"
+        },
+        "filterByFormula": "=AND(\n  Action != \"Reject\",\n  Action != \"Generate Content\"\n)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        6176,
+        1808
+      ],
+      "id": "4f16836d-5665-43c8-92ba-21b54fb2e4f7",
+      "name": "Get Instagram Ideas"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Find LinkedIn Ideas",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app7GtQRtd1vnFEdW",
+          "mode": "list",
+          "cachedResultName": "Social Automation",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblHfwIJxk5aJllTO",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Ideas",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW/tblHfwIJxk5aJllTO"
+        },
+        "filterByFormula": "=AND(\n  Action != \"Reject\",\n  Action != \"Generate Content\"\n)",
+        "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        6336,
+        1808
+      ],
+      "id": "e62df575-15c9-4959-bf05-7625150fa2d3",
+      "name": "Get LinkedIn Ideas"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Find Tiktok Ideas",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "app7GtQRtd1vnFEdW",
+          "mode": "list",
+          "cachedResultName": "Social Automation",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbl0RiS6dwyWmEVwz",
+          "mode": "list",
+          "cachedResultName": "TikTok Ideas",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW/tbl0RiS6dwyWmEVwz"
+        },
+        "filterByFormula": "=AND(\n  Action != \"Reject\",\n  Action != \"Generate Content\"\n)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        6496,
+        1808
+      ],
+      "id": "a78adb35-321a-4cb1-bf8b-19a384c63df4",
+      "name": "Get Tiktok Ideas"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Choose Instagram Ideas",
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app7GtQRtd1vnFEdW",
+          "mode": "list",
+          "cachedResultName": "Social Automation",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbla6GNwPXjx0yalQ",
+          "mode": "list",
+          "cachedResultName": "Instagram Ideas",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW/tbla6GNwPXjx0yalQ"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Selected Framework": "={{ $fromAI(\"framework\") }}",
+            "Action": "={{ $fromAI(\"action\") }}",
+            "URL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL__using_to_match_', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Post ID",
+              "displayName": "Post ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Post Type",
+              "displayName": "Post Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Reel",
+                  "value": "Reel"
+                },
+                {
+                  "name": "Carousel",
+                  "value": "Carousel"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Number of Slides",
+              "displayName": "Number of Slides",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Script",
+              "displayName": "Script",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Viral Score",
+              "displayName": "Viral Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Primary Strengths",
+              "displayName": "Primary Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 1",
+              "displayName": "Idea Framework 1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 2",
+              "displayName": "Idea Framework 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 3",
+              "displayName": "Idea Framework 3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Framework",
+              "displayName": "Selected Framework",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Framework 1",
+                  "value": "Framework 1"
+                },
+                {
+                  "name": "Framework 2",
+                  "value": "Framework 2"
+                },
+                {
+                  "name": "Framework 3",
+                  "value": "Framework 3"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Action",
+              "displayName": "Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Generate Content",
+                  "value": "Generate Content"
+                },
+                {
+                  "name": "Reject",
+                  "value": "Reject"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Modified",
+              "displayName": "Last Modified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        5712,
+        1808
+      ],
+      "id": "848fdbbf-1559-4cf8-b3f9-f6aa6bd1771e",
+      "name": "Choose Instagram Idea"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Choose LinkedIn Ideas",
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app7GtQRtd1vnFEdW",
+          "mode": "list",
+          "cachedResultName": "Social Automation",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbla6GNwPXjx0yalQ",
+          "mode": "list",
+          "cachedResultName": "Instagram Ideas",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW/tbla6GNwPXjx0yalQ"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Selected Framework": "={{ $fromAI(\"framework\") }}",
+            "Action": "={{ $fromAI(\"action\") }}",
+            "URL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL__using_to_match_', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Post ID",
+              "displayName": "Post ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Post Type",
+              "displayName": "Post Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Reel",
+                  "value": "Reel"
+                },
+                {
+                  "name": "Carousel",
+                  "value": "Carousel"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Number of Slides",
+              "displayName": "Number of Slides",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Script",
+              "displayName": "Script",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Viral Score",
+              "displayName": "Viral Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Primary Strengths",
+              "displayName": "Primary Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 1",
+              "displayName": "Idea Framework 1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 2",
+              "displayName": "Idea Framework 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 3",
+              "displayName": "Idea Framework 3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Framework",
+              "displayName": "Selected Framework",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Framework 1",
+                  "value": "Framework 1"
+                },
+                {
+                  "name": "Framework 2",
+                  "value": "Framework 2"
+                },
+                {
+                  "name": "Framework 3",
+                  "value": "Framework 3"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Action",
+              "displayName": "Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Generate Content",
+                  "value": "Generate Content"
+                },
+                {
+                  "name": "Reject",
+                  "value": "Reject"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Modified",
+              "displayName": "Last Modified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        5872,
+        1808
+      ],
+      "id": "093e1faf-f800-4856-8dd5-2e26bad3b5b7",
+      "name": "Choose LinkedIn Ideas"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Choose Tiktok Idea",
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "app7GtQRtd1vnFEdW",
+          "mode": "list",
+          "cachedResultName": "Social Automation",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbla6GNwPXjx0yalQ",
+          "mode": "list",
+          "cachedResultName": "Instagram Ideas",
+          "cachedResultUrl": "https://airtable.com/app7GtQRtd1vnFEdW/tbla6GNwPXjx0yalQ"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Selected Framework": "={{ $fromAI(\"framework\") }}",
+            "Action": "={{ $fromAI(\"action\") }}",
+            "URL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL__using_to_match_', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Post ID",
+              "displayName": "Post ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Post Type",
+              "displayName": "Post Type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Reel",
+                  "value": "Reel"
+                },
+                {
+                  "name": "Carousel",
+                  "value": "Carousel"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Number of Slides",
+              "displayName": "Number of Slides",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Script",
+              "displayName": "Script",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Viral Score",
+              "displayName": "Viral Score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Primary Strengths",
+              "displayName": "Primary Strengths",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 1",
+              "displayName": "Idea Framework 1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 2",
+              "displayName": "Idea Framework 2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Idea Framework 3",
+              "displayName": "Idea Framework 3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Selected Framework",
+              "displayName": "Selected Framework",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Framework 1",
+                  "value": "Framework 1"
+                },
+                {
+                  "name": "Framework 2",
+                  "value": "Framework 2"
+                },
+                {
+                  "name": "Framework 3",
+                  "value": "Framework 3"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Action",
+              "displayName": "Action",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Generate Content",
+                  "value": "Generate Content"
+                },
+                {
+                  "name": "Reject",
+                  "value": "Reject"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Last Modified",
+              "displayName": "Last Modified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        6016,
+        1808
+      ],
+      "id": "2eed565a-6dee-4d3a-a45f-68dd24e141c8",
+      "name": "Choose Tiktok Idea"
+    },
+    {
+      "parameters": {
+        "folderId": "default",
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        2096
+      ],
+      "id": "addf2496-c72e-4443-a01b-5b63e55c94d5",
+      "name": "Create a document in Google Docs"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Doc_ID_or_URL', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('actionFields0_Text', ``, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        2096
+      ],
+      "id": "2204716a-6a55-4c02-ac84-c248d50a0445",
+      "name": "Update a document in Google Docs"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Doc_ID_or_URL', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        2096
+      ],
+      "id": "9ef533fd-4337-45fc-9a65-805e2d0a5f80",
+      "name": "Get a document"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2176,
+        1056
+      ],
+      "id": "8386d452-fc9a-4c37-ad45-73fd964682e7",
+      "name": "Send a text message",
+      "webhookId": "aec94a2e-a0b1-4d58-b957-59cd84341373"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        816
+      ],
+      "id": "535adaf6-98ec-45bb-ba67-7e49b82bd634",
+      "name": "Telegram Trigger",
+      "webhookId": "1f9dbd4f-178e-4f2f-9a4c-d2ecd283ef85"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1824,
+        992
+      ],
+      "id": "e651711d-e698-4395-aa55-bb59c71b669b",
+      "name": "OpenAI"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "79308d08-eb8b-42af-a350-100ccb56dea1",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "aa713a2a-0c8e-4dc7-95fa-2b45d7b2919f",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1984,
+        816
+      ],
+      "id": "34a2dde5-5221-41bb-9ba6-8be1a9e7874e",
+      "name": "Check Data Type"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2144,
+        864
+      ],
+      "id": "d4e0c0bd-77c1-4986-b25a-4eee36a8e985",
+      "name": "Download Audio",
+      "webhookId": "e582ca1b-8031-4189-849d-003f646876e5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e997b462-3fec-4b74-adc0-909978bf7681",
+              "name": "prompt",
+              "value": "= {{ $('Telegram Trigger').item.json.message.text }} {{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1696,
+        1152
+      ],
+      "id": "af26c12f-266e-4d43-a7b9-a38df27187a8",
+      "name": "Combine fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e53859ef-a47b-4819-9c65-d0838c6c8d50",
+              "leftValue": "={{ $json.message.chat.id }}",
+              "rightValue": 5675741296,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1840,
+        816
+      ],
+      "id": "ea2f7ae1-9158-4d9a-9412-da737f5cdced",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "contextWindowLength": 7
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        2656
+      ],
+      "id": "c54685c3-ec33-45a4-a029-e61c794e7da5",
+      "name": "Postgres Chat Memory"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2272,
+        2448
+      ],
+      "id": "7473394e-4f13-4fe8-b45e-67e6a051fbb5",
+      "name": "GPT-4.1",
+      "credentials": {
+        "openAiApi": {
+          "id": "d0mIxByWoXQGP0nJ",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://flow-guard.io/api/v1/dashboard/overview",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "X-FlowGuard-API-Key"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2384,
+        960
+      ],
+      "id": "95232473-a689-41a3-a9b0-940042868ef2",
+      "name": "FlowGuard"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = items[0].json;\n\nconst rows = [];\n\n// Saved from cache - first row before Total cost\nrows.push({\n  section: 'cacheReport',\n  project: data.project.title,\n  apiKey: data.apiKey.name,\n  name: data.overview.cacheReport.savedFromCache.label,\n  key: 'saved_from_cache',\n  value: data.overview.cacheReport.savedFromCache.value,\n  description: 'Estimated LLM cost saved from repeated prompts served by FlowGuard cache',\n  workflow: '',\n  node: '',\n  model: '',\n  tokens: '',\n  cost: data.overview.cacheReport.savedFromCache.value,\n  latency: '',\n  status: ''\n});\n\n// Metrics\nfor (const metric of data.overview.metrics || []) {\n  rows.push({\n    section: 'metrics',\n    project: data.project.title,\n    apiKey: data.apiKey.name,\n    name: metric.label,\n    key: metric.key,\n    value: metric.value,\n    description: metric.description || '',\n    workflow: '',\n    node: '',\n    model: '',\n    tokens: '',\n    cost: '',\n    latency: '',\n    status: ''\n  });\n}\n\n// Cache report details\nrows.push({\n  section: 'cacheReport',\n  project: data.project.title,\n  apiKey: data.apiKey.name,\n  name: data.overview.cacheReport.cachedCalls.label,\n  key: 'cached_calls',\n  value: data.overview.cacheReport.cachedCalls.value,\n  description: 'Provider calls avoided by cache',\n  workflow: '',\n  node: '',\n  model: '',\n  tokens: '',\n  cost: '',\n  latency: '',\n  status: ''\n});\n\nrows.push({\n  section: 'cacheReport',\n  project: data.project.title,\n  apiKey: data.apiKey.name,\n  name: data.overview.cacheReport.hitRate.label,\n  key: 'hit_rate',\n  value: data.overview.cacheReport.hitRate.value,\n  description: 'Cache hit rate',\n  workflow: '',\n  node: '',\n  model: '',\n  tokens: '',\n  cost: '',\n  latency: '',\n  status: ''\n});\n\n// Top workflows by cost\nfor (const workflow of data.overview.topWorkflowsByCost || []) {\n  rows.push({\n    section: 'topWorkflowsByCost',\n    project: data.project.title,\n    apiKey: data.apiKey.name,\n    name: workflow.name,\n    key: '',\n    value: '',\n    description: '',\n    workflow: workflow.name,\n    node: '',\n    model: '',\n    tokens: workflow.tokens,\n    cost: workflow.cost,\n    latency: '',\n    status: workflow.status\n  });\n}\n\n// Top nodes by cost\nfor (const node of data.overview.topNodesByCost || []) {\n  rows.push({\n    section: 'topNodesByCost',\n    project: data.project.title,\n    apiKey: data.apiKey.name,\n    name: node.name,\n    key: '',\n    value: '',\n    description: '',\n    workflow: node.workflow,\n    node: node.name,\n    model: '',\n    tokens: '',\n    cost: node.cost,\n    latency: node.latency,\n    status: node.status\n  });\n}\n\n// Recent requests\nfor (const request of data.overview.recentRequests || []) {\n  rows.push({\n    section: 'recentRequests',\n    project: data.project.title,\n    apiKey: data.apiKey.name,\n    name: '',\n    key: '',\n    value: '',\n    description: '',\n    workflow: request.workflow,\n    node: request.node,\n    model: request.model,\n    tokens: request.tokens,\n    cost: request.cost,\n    latency: '',\n    status: request.status\n  });\n}\n\nconst headers = Object.keys(rows[0]);\n\nfunction escapeCsv(value) {\n  if (value === null || value === undefined) return '';\n  const str = String(value);\n  return `\"${str.replace(/\"/g, '\"\"')}\"`;\n}\n\nconst csv = [\n  headers.join(','),\n  ...rows.map(row => headers.map(header => escapeCsv(row[header])).join(','))\n].join('\\n');\n\nreturn [\n  {\n    json: {\n      fileName: 'flowguard-report.csv',\n      savedFromCache: data.overview.cacheReport.savedFromCache.value\n    },\n    binary: {\n      data: await this.helpers.prepareBinaryData(\n        Buffer.from(csv, 'utf8'),\n        'flowguard-report.csv',\n        'text/csv'\n      )\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        1120
+      ],
+      "id": "286436ce-a468-4db0-a607-f24305fb8e3d",
+      "name": "FlowGuard CSV Formatter"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        960
+      ],
+      "id": "b6005b26-70d1-4ee4-af48-c82d7329e385",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "content": "## Costs Protection\n",
+        "height": 448,
+        "width": 592
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2336,
+        832
+      ],
+      "typeVersion": 1,
+      "id": "16862c1a-188d-40a1-91db-1fe7f8a2c48f",
+      "name": "Sticky Note11"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Blog Post Writer",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Email Management Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Finance Tracker Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Travel Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Blog Post Writer",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Research": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Perplexity": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "In-Depth Research Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Research Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model in Perplexity1": {
+      "ai_tool": [
+        [
+          {
+            "node": "In-Depth Research Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Blog Post Writer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Titles and Structure Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Blog Post Writer",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Titles and Structure Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Section Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Blog Post Writer",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "ai_tool": [
+        [
+          {
+            "node": "Generate Image Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status": {
+      "ai_tool": [
+        [
+          {
+            "node": "Generate Image Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Blog Post Writer",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Autocomplete Suggestions": {
+      "ai_tool": [
+        [
+          {
+            "node": "Titles and Structure Tool",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Blog Post Writer": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Entries": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Tracker Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Entry": {
+      "ai_tool": [
+        [
+          {
+            "node": "Finance Tracker Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finance Tracker Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather and News Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-5-Nano": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Weather and News Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Calendar Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Titles and Structure Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Generate Image Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Get Contact Info",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Travel Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SERPapi news": {
+      "ai_tool": [
+        [
+          {
+            "node": "Weather and News Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weather": {
+      "ai_tool": [
+        [
+          {
+            "node": "Weather and News Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact Info": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many contacts in Google Contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "Get Contact Info",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a contact in Google Contacts": {
+      "ai_tool": [
+        [
+          {
+            "node": "Get Contact Info",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Travel Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Flights": {
+      "ai_tool": [
+        [
+          {
+            "node": "Travel Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Hotels": {
+      "ai_tool": [
+        [
+          {
+            "node": "Travel Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Management Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "markAsRead1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "markAsUnread1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "removeLabels1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "addLabels1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "reply1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "Email Management Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Social Media Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Instagram Ideas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get LinkedIn Ideas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tiktok Ideas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Instagram Idea": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose LinkedIn Ideas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Tiktok Idea": {
+      "ai_tool": [
+        [
+          {
+            "node": "Social Media Calendar",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document in Google Docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a document in Google Docs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a document": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Combine fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Data Type": {
+      "main": [
+        [
+          {
+            "node": "Combine fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine fields": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Check Data Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4.1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "In-Depth Research Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Finance Tracker Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Email Management Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Write Section Tool",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "FlowGuard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FlowGuard": {
+      "main": [
+        [
+          {
+            "node": "FlowGuard CSV Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FlowGuard CSV Formatter": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9c307e7a-bc2f-4eed-af8b-c367efa496c5",
+  "meta": {
+    "instanceId": "b49232a950970ead454d601a99afa0edb57f006f82ff0127e11d95d26dd06020"
+  },
+  "id": "d5ze6jtm6fnsMB1e",
+  "tags": []
+}
