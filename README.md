@@ -4,6 +4,36 @@ A powerful multi-agent Personal Assistant built with **n8n**, designed to automa
 
 This workflow combines multiple specialized AI agents into a single assistant that can be accessed through chat or voice commands.
 
+> [!IMPORTANT]
+> Credentials are not included in the workflow. An early export contained a SerpAPI key in a request URL; treat that key as compromised and revoke it before using this project. The current workflow uses n8n's SerpAPI credential instead.
+
+## Quick start
+
+1. Download [`workflows/Personal Assistant.json`](workflows/Personal%20Assistant.json).
+2. In n8n, choose **Import from File** and select the downloaded workflow.
+3. Create the credentials listed below, then assign them to every node showing a credential warning.
+4. Re-select the Airtable bases/tables and any Google Drive destination so they point to resources in your account.
+5. Keep the workflow inactive while testing. Exercise read-only commands first, then verify every node that can send email, modify a calendar, write files, or create records.
+6. Activate the Telegram trigger only after the test run behaves as expected.
+
+The workflow defaults calendar operations to the authenticated Google account's primary calendar. Use least-privilege OAuth scopes and separate test resources where possible.
+
+### Required credentials
+
+| Integration | n8n credential/configuration |
+| --- | --- |
+| OpenAI and Anthropic | Provider API credentials |
+| Telegram | Telegram Bot API credential |
+| Gmail, Calendar, Contacts, Docs | Google OAuth credentials with only the scopes you use |
+| Airtable | Airtable personal access token and your own base/table selections |
+| Tavily and Replicate | HTTP Header Auth credentials |
+| SerpAPI | Built-in SerpAPI credential |
+| WeatherAPI | HTTP Query Auth credential |
+| Perplexity | Perplexity credential |
+| FlowGuard | `X-FlowGuard-API-Key` header and the endpoint for your account |
+
+Do not paste tokens into request URLs, prompts, sticky notes, or exported JSON.
+
 ---
 
 ## ✨ Features
@@ -241,25 +271,21 @@ FlowGuard helps prevent AI workflows from silently burning money while providing
 
 ---
 
-## ⚠️ Requirements
+## Validation
 
-Before importing the workflow, configure:
+Validate the export before committing it:
 
-- LLM Provider API Keys
-- Telegram Bot Token
-- Google OAuth Credentials
-- Airtable API Key
-- Tavily API Key
-- Perplexity API Key
-- SerpAPI Key
-- WeatherAPI Key
-- Replicate API Key
-- FlowGuard Credentials
+```bash
+node --test
+node scripts/validate-workflow.mjs
+```
+
+The validator checks JSON structure, node and connection integrity, accidental hard-coded credentials, and insecure external HTTP URLs. GitHub Actions runs the same check on every pull request and push to `main`.
+
+This is a static check. It cannot verify external credentials, provider quotas, or destructive side effects, so test imported workflows against disposable resources before activation.
 
 ---
 
 ## 📜 License
 
-Feel free to use, modify, and extend this workflow for your own projects.
-
-If you find it useful, consider giving the repository a ⭐.
+This project is available under the [MIT License](LICENSE).
