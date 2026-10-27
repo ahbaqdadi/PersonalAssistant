@@ -389,8 +389,10 @@
     {
       "parameters": {
         "toolDescription": "Get autocomplete suggestions",
-        "url": "=https://serpapi.com/search.json?engine=google_autocomplete&q={{ $fromAI(\"keyword_as_searched_by_user\") }}&api_key=a60317e455992230c808d2c9028f2d634c4758d691e9729b1d3c6075ed20736f",
-        "options": {}
+        "url": "=https://serpapi.com/search.json?engine=google_autocomplete&q={{ $fromAI(\"keyword_as_searched_by_user\") }}",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "serpApi"
       },
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.2,
@@ -629,7 +631,7 @@
     {
       "parameters": {
         "toolDescription": "Get weather information",
-        "url": "http://api.weatherapi.com/v1//forecast.json",
+        "url": "https://api.weatherapi.com/v1/forecast.json",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpQueryAuth",
         "sendQuery": true,
@@ -677,9 +679,9 @@
       "parameters": {
         "calendar": {
           "__rl": true,
-          "value": "shabbir@shabbirnoor.com",
+          "value": "primary",
           "mode": "list",
-          "cachedResultName": "shabbir@shabbirnoor.com"
+          "cachedResultName": "Primary Calendar"
         },
         "additionalFields": {
           "attendees": [
@@ -704,9 +706,9 @@
         "operation": "delete",
         "calendar": {
           "__rl": true,
-          "value": "shabbir@shabbirnoor.com",
+          "value": "primary",
           "mode": "list",
-          "cachedResultName": "shabbir@shabbirnoor.com"
+          "cachedResultName": "Primary Calendar"
         },
         "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
         "options": {}
@@ -725,9 +727,9 @@
         "operation": "getAll",
         "calendar": {
           "__rl": true,
-          "value": "shabbir@shabbirnoor.com",
+          "value": "primary",
           "mode": "list",
-          "cachedResultName": "shabbir@shabbirnoor.com"
+          "cachedResultName": "Primary Calendar"
         },
         "returnAll": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Return_All', ``, 'boolean') }}",
         "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
@@ -748,9 +750,9 @@
         "operation": "get",
         "calendar": {
           "__rl": true,
-          "value": "shabbir@shabbirnoor.com",
+          "value": "primary",
           "mode": "list",
-          "cachedResultName": "shabbir@shabbirnoor.com"
+          "cachedResultName": "Primary Calendar"
         },
         "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
         "options": {}
@@ -769,9 +771,9 @@
         "operation": "update",
         "calendar": {
           "__rl": true,
-          "value": "shabbir@shabbirnoor.com",
+          "value": "primary",
           "mode": "list",
-          "cachedResultName": "shabbir@shabbirnoor.com"
+          "cachedResultName": "Primary Calendar"
         },
         "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
         "useDefaultReminders": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Use_Default_Reminders', ``, 'boolean') }}",
