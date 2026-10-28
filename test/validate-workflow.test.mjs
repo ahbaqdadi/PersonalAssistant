@@ -94,3 +94,33 @@ test('rejects connections to missing nodes', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /target node "Missing" does not exist/);
 });
+
+test('rejects social idea writers routed to another platform table', () => {
+  const airtableNode = (name, operation, table) => ({
+    id: `${operation}-${table}`,
+    name,
+    type: 'n8n-nodes-base.airtableTool',
+    typeVersion: 2.1,
+    parameters: {
+      operation,
+      base: { value: 'social-base' },
+      table: { value: table },
+    },
+    position: [0, 0],
+  });
+
+  const result = validate(
+    workflow({
+      nodes: [
+        airtableNode('Get LinkedIn Ideas', 'search', 'linkedin-table'),
+        airtableNode('Choose LinkedIn Ideas', 'upsert', 'instagram-table'),
+      ],
+    }),
+  );
+
+  assert.equal(result.status, 1);
+  assert.match(
+    result.stderr,
+    /Choose LinkedIn Ideas must use the same Airtable base and table as Get LinkedIn Ideas/,
+  );
+});

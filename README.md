@@ -280,7 +280,7 @@ node --test
 node scripts/validate-workflow.mjs
 ```
 
-The validator checks JSON structure, node and connection integrity, accidental hard-coded credentials, and insecure external HTTP URLs. GitHub Actions runs the same check on every pull request and push to `main`.
+The validator checks JSON structure, node and connection integrity, matched Airtable reader/writer routing, accidental hard-coded credentials, and insecure external HTTP URLs. GitHub Actions runs the same check on every pull request and push to `main`.
 
 This is a static check. It cannot verify external credentials, provider quotas, or destructive side effects, so test imported workflows against disposable resources before activation.
 
