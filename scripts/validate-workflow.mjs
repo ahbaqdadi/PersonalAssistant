@@ -53,6 +53,8 @@ for (const workflowPath of workflowPaths) {
 
   const nodeNames = new Set();
   const nodeIds = new Set();
+  const ideaReaders = new Map();
+  const ideaWriters = new Map();
 
   for (const [index, node] of nodes.entries()) {
     const path = `$.nodes[${index}]`;
@@ -80,6 +82,37 @@ for (const workflowPath of workflowPaths) {
 
     if (typeof node.type !== 'string' || node.type.trim() === '') {
       errors.push(`${path}.type: node type must be a non-empty string`);
+    }
+
+    if (node.type === 'n8n-nodes-base.airtableTool') {
+      const ideaKey = getIdeaToolKey(node.name);
+
+      if (ideaKey && node.parameters?.operation === 'search') {
+        ideaReaders.set(ideaKey, { node, path });
+      }
+
+      if (ideaKey && node.parameters?.operation === 'upsert') {
+        ideaWriters.set(ideaKey, { node, path });
+      }
+    }
+  }
+
+  for (const [ideaKey, writer] of ideaWriters) {
+    const reader = ideaReaders.get(ideaKey);
+
+    if (!reader) {
+      continue;
+    }
+
+    const readerBase = reader.node.parameters?.base?.value;
+    const readerTable = reader.node.parameters?.table?.value;
+    const writerBase = writer.node.parameters?.base?.value;
+    const writerTable = writer.node.parameters?.table?.value;
+
+    if (readerBase !== writerBase || readerTable !== writerTable) {
+      errors.push(
+        `${writer.path}.parameters: ${writer.node.name} must use the same Airtable base and table as ${reader.node.name}`,
+      );
     }
   }
 
@@ -193,4 +226,14 @@ function visitStrings(value, path, visitor) {
   for (const [key, entry] of Object.entries(value)) {
     visitStrings(entry, `${path}.${key}`, visitor);
   }
+}
+
+function getIdeaToolKey(name) {
+  if (typeof name !== 'string') {
+    return null;
+  }
+
+  const match = name.match(/^(?:Get|Choose)\s+(.+?)\s+Ideas?$/i);
+
+  return match ? match[1].toLowerCase().replace(/[^a-z0-9]/g, '') : null;
 }
